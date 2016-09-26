@@ -90,11 +90,9 @@ class InjectorService {
         }
     }
 
-    private def getMapping(projectId, plan, tool) {
-        def mapping
-        if(plan.id != null) {
-            mapping = getMappingFromBB(projectId, tool)
-        }
+    private def getMapping(projectId, tool) {
+        def mapping = getMappingFromBB(projectId, tool)
+
         if(mapping == null) {
             mapping = [
                 project: [
@@ -201,7 +199,7 @@ class InjectorService {
             ]
         }
 
-        def mapping = getMapping(projectId, plan, 'Redmine')
+        def mapping = getMapping(projectId, 'Redmine')
         def redmineIssues = getIssuesFromRedmine(externalProjectId)
 
         if(redmineIssues.issues.size() > 0) {
