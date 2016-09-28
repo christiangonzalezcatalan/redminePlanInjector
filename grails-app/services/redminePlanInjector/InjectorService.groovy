@@ -10,6 +10,7 @@ import org.bson.types.ObjectId
 @Transactional
 class InjectorService {
     private static String toolName = 'Redmine'
+    private static String processName = 'RedminePlanInjector'
     RestBuilder restClient = new RestBuilder()
     String redmineUrl = Holders.grailsApplication.config.getProperty('injector.redmineUrl')
     String gemsbbUrl = Holders.grailsApplication.config.getProperty('injector.gemsbbUrl')
@@ -28,6 +29,16 @@ class InjectorService {
             responsible: [id: responsibleId],
             contributors: []
         ]
+    }
+
+    private def getProjectFromBB(String projectId) {
+        def resp = restClient.get("${gemsbbUrl}/projects/${projectId}")
+
+        if(resp.getStatusCode() != HttpStatus.OK) {
+            throw new Exception("Error al obtener el registro del plan del Blackboard. HttpStatusCode: ${resp.getStatusCode()}")
+        }
+
+        resp.json
     }
 
     private def getPlanFromBB(String projectId) {
@@ -58,9 +69,9 @@ class InjectorService {
         task.internalId
     }
 
-    private def getMemberByEmail(redmineUserId) {
+    private def getMemberByEmailFromRedmine(repository, redmineUserId) {
         def resp = restClient.get(
-            "${redmineUrl}/users/${redmineUserId}.json?key=baa9da1d47247ea95bedc425027e7bb30df8f883")
+            "${repository.data.root}/users/${redmineUserId}.json?key=${repository.data.apiKey}")
 
         if(resp.getStatusCode() != HttpStatus.OK) {
             throw new Exception("Error al obtener el usuario de Redmine. HttpStatusCode: ${resp.getStatusCode()}")
@@ -105,8 +116,8 @@ class InjectorService {
         mapping
     }
 
-    private def getIssuesFromRedmine(redmineProjectId) {
-        def resp = restClient.get("${redmineUrl}/issues.json?project_id=${redmineProjectId}")
+    private def getIssuesFromRedmine(repository, redmineProjectId) {
+        def resp = restClient.get("${repository.data.root}/issues.json?project_id=${redmineProjectId}")
 
         if(resp.getStatusCode() != HttpStatus.OK) {
             throw new Exception("Error al obtener los issues de Redmine. HttpStatusCode: ${resp.getStatusCode()}")
@@ -180,6 +191,42 @@ class InjectorService {
         responseMapping.json
     }
 
+    private def getToolsConfigurationFromBB() {
+        def resp = restClient.get(
+            "${gemsbbUrl}/toolsConfiguration?toolName=${InjectorService.toolName}&processName=${InjectorService.processName}")
+
+        if(resp.getStatusCode() != HttpStatus.OK) {
+            throw new Exception("Error al obtener la configuración del proceso ${InjectorService.processName}. HttpStatusCode: ${resp.getStatusCode()}")
+        }
+
+        resp.json
+    }
+
+    private def getRepositoryFromBB(organizationId) {
+        def resp = restClient.get(
+            "${gemsbbUrl}/organizations/${organizationId}/repositories?toolName=${InjectorService.toolName}")
+
+        if(resp.getStatusCode() != HttpStatus.OK) {
+            throw new Exception("Error al obtener el repositorio. HttpStatusCode: ${resp.getStatusCode()}")
+        }
+
+        JSONObject result = resp.json
+
+        if(result.size() == 1 || result.id != null) {
+            return result
+        }
+    }
+
+    def injectProcess() {
+        def toolsConfig = getToolsConfigurationFromBB()
+        toolsConfig.each() {
+            def project = getProjectFromBB(it.project.id)
+            def repository = getRepositoryFromBB(project.organization.id)
+
+            injectPlan(it.project.id, it.parameters.projectId, repository)
+        }
+    }
+
     /*
     0. Get proyecto?
     1- Get plan
@@ -188,7 +235,7 @@ class InjectorService {
     4. Post/Put plan
     5. Post/Put mapping
     */
-    def injectPlan(String projectId, String externalProjectId) {
+    def injectPlan(String projectId, Integer externalProjectId, repository) {
         def plan = getPlanFromBB(projectId)
         if(plan == null) {
             plan = [
@@ -200,7 +247,7 @@ class InjectorService {
         }
 
         def mapping = getMapping(projectId, 'Redmine')
-        def redmineIssues = getIssuesFromRedmine(externalProjectId)
+        def redmineIssues = getIssuesFromRedmine(repository, externalProjectId)
 
         if(redmineIssues.issues.size() > 0) {
             def taskList = []
@@ -209,7 +256,7 @@ class InjectorService {
                 def issue = it
                 def responsibleId = null
                 if(issue.assigned_to != null) {
-                    responsibleId = getMemberByEmail(issue.assigned_to.id.toInteger()).id
+                    responsibleId = getMemberByEmailFromRedmine(repository, issue.assigned_to.id.toInteger()).id
                 }
 
                 def taskId = getTaskIdFromMap(issue.id, mapping.map)
@@ -224,10 +271,9 @@ class InjectorService {
                 ]
                 taskList.add(task)
             }
-
+            
             def bbPlan = saveBlackboardPlan(plan, projectId, taskList)
             def bbMapping = saveBlackboardMapping(mapping, projectId, bbPlan)
-            println mapping
         }
     }
 }

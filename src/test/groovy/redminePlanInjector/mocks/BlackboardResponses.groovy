@@ -9,7 +9,7 @@ class BlackboardResponses {
   {
     "id": "57cf835f8acec65eba3b579f",
     "project": {
-      "id": "57cc59368acec62bf2f7d7ed"
+      "id": "57ccad338acec633f77f862e"
     },
     "tasks": [
       {
@@ -71,7 +71,7 @@ class BlackboardResponses {
       {"internalId": "57d0c86c8acec6725ee5acd2", "entityType":"Task", "externalId": "8"}
     ],
     "project": {
-      "id": "57cc59368acec62bf2f7d7ed"
+      "id": "57ccad338acec633f77f862e"
     },
     "tool": "Redmine"
   }
@@ -92,7 +92,7 @@ class BlackboardResponses {
         """{
   "id": "57cf835f8acec65eba3b579f",
   "project": {
-    "id": "57cc59368acec62bf2f7d7ed"
+    "id": "57ccad338acec633f77f862e"
   },
   "tasks": [
     {
@@ -123,5 +123,48 @@ class BlackboardResponses {
     }
   ]
 }"""
+    }
+    
+    static String getToolConfigurationFromBlackboard() {
+        """[{
+  "id": "57e9dc908acec651a7232ea6",
+  "parameters": {
+    "projectId": 2
+  },
+  "processNames": [
+    "RedminePlanInjector",
+    "RedmineTraceInjector"
+  ],
+  "project": {
+    "id": "57ccad338acec633f77f862e"
+  },
+  "toolName": "Redmine"
+}]"""
+    }
+
+    static String getProjectFromBlackboard() {
+        """{
+    "id": "57ccad338acec633f77f862e",
+    "name": "Mi proyecto 2",
+    "organization": {
+      "id": "57e89b278acec6487695a4b5"
+    }
+}"""
+    }
+
+    static String getRepositoryFromBlackboard() {
+        """[
+  {
+    "id": "57e8a96b8acec64b7e3c8422",
+    "data": {
+      "apiKey": "baa9da1d47247ea95bedc425027e7bb30df8f883",
+      "root": "http://localhost:8081"
+    },
+    "organization": {
+      "id": "57e89b278acec6487695a4b5"
+    },
+    "toolName": "Redmine"
+  }
+]"""
     }
 }
