@@ -12,7 +12,6 @@ class InjectorService {
     private static String toolName = 'Redmine'
     private static String processName = 'RedminePlanInjector'
     RestBuilder restClient = new RestBuilder()
-    String redmineUrl = Holders.grailsApplication.config.getProperty('injector.redmineUrl')
     String gemsbbUrl = Holders.grailsApplication.config.getProperty('injector.gemsbbUrl')
 
     private def buildTask(JSONObject issue) {
@@ -271,7 +270,7 @@ class InjectorService {
                 ]
                 taskList.add(task)
             }
-            
+
             def bbPlan = saveBlackboardPlan(plan, projectId, taskList)
             def bbMapping = saveBlackboardMapping(mapping, projectId, bbPlan)
         }
