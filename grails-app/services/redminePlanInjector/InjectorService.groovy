@@ -6,6 +6,8 @@ import org.grails.web.json.JSONObject
 import org.springframework.http.HttpStatus
 import grails.util.Holders
 import org.bson.types.ObjectId
+import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
+import org.springframework.beans.factory.annotation.Autowired
 
 @Transactional
 class InjectorService {
@@ -13,6 +15,8 @@ class InjectorService {
     private static String processName = 'RedminePlanInjector'
     RestBuilder restClient = new RestBuilder()
     String gemsbbUrl = Holders.grailsApplication.config.getProperty('injector.gemsbbUrl')
+    @Autowired
+    RabbitMessagePublisher rabbitMessagePublisher
 
     private def buildTask(JSONObject issue) {
         def responsibleId = null
@@ -273,6 +277,13 @@ class InjectorService {
 
             def bbPlan = saveBlackboardPlan(plan, projectId, taskList)
             def bbMapping = saveBlackboardMapping(mapping, projectId, bbPlan)
+        }
+
+        println "Plan del proyecto ${projectId} cargado."
+        rabbitMessagePublisher.send {
+            //routingKey = 'reporting'
+            exchange = 'myQueueExchange'
+            body = projectId
         }
     }
 }
