@@ -51,10 +51,6 @@ environments:
                 testOnReturn: false
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
-
----
-quartz:
-    autoStartup: true
 ---
 rabbitmq:
     connections:
@@ -63,11 +59,12 @@ rabbitmq:
         username: guest
         password: guest
     queues:
-      - name: myQueue
-        exchange: myQueueExchange
+      - name: testGemsBBPlan
+        exchange: testGemsBBExchange
+        binding: 'RedminePlanInjector.load'
     exchanges:
-      - name: myQueueExchange
-        type: fanout
+      - name: testGemsBBExchange
+        type: topic
 ---
 grails:
     profile: web

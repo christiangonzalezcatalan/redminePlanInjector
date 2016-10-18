@@ -166,8 +166,6 @@ class InjectorService {
                 json {
                     project = mapping.project
                     tool = mapping.tool
-                    //entityType = mapping.entityType
-                    //externalId = bbObject.id
                     map = mapping.map
                 }
             }
@@ -179,8 +177,6 @@ class InjectorService {
                     id = mapping.id
                     project = mapping.project
                     tool = mapping.tool
-                    //entityType = mapping.entityType
-                    //externalId = bbObject.id
                     map = mapping.map
                 }
             }
@@ -281,8 +277,8 @@ class InjectorService {
 
         println "Plan del proyecto ${projectId} cargado."
         rabbitMessagePublisher.send {
-            //routingKey = 'reporting'
-            exchange = 'myQueueExchange'
+            routingKey = 'Plan.update'
+            exchange = 'testGemsBBExchange'
             body = projectId
         }
     }

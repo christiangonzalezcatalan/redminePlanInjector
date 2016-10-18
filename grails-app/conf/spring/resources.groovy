@@ -1,8 +1,7 @@
 // Place your Spring DSL code here
 beans = {
     injectorService(redminePlanInjector.InjectorService) {}
-    injectorJob(redminePlanInjector.InjectorJob) {
+    injectorConsumer(redminePlanInjector.InjectorConsumer) {
         injectorService = ref("injectorService")
-        //logService = ref("logService")
     }
 }
