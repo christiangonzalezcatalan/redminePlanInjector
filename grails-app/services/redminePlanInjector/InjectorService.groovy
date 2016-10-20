@@ -8,6 +8,7 @@ import grails.util.Holders
 import org.bson.types.ObjectId
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 import org.springframework.beans.factory.annotation.Autowired
+import groovy.json.JsonOutput
 
 @Transactional
 class InjectorService {
@@ -128,14 +129,14 @@ class InjectorService {
         resp.json
     }
 
-    private def saveBlackboardPlan(plan, projectId, taskList) {
+    private def saveBlackboardPlan(plan, projectId) {
         def responsePlan
         if(plan.id == null) {
             responsePlan = restClient.post("${gemsbbUrl}/plans") {
                 contentType "application/json"
                 json {
                     project = [id: projectId]
-                    tasks = taskList
+                    tasks = plan.tasks
                 }
             }
         }
@@ -145,7 +146,7 @@ class InjectorService {
                 json {
                     id = plan.id
                     project = [id: projectId]
-                    tasks = taskList
+                    tasks = plan.tasks
                 }
             }
         }
@@ -236,6 +237,8 @@ class InjectorService {
     */
     def injectPlan(String projectId, Integer externalProjectId, repository) {
         def plan = getPlanFromBB(projectId)
+        def oldPlan = JsonOutput.toJson(plan)
+
         if(plan == null) {
             plan = [
                 project: [
@@ -271,15 +274,25 @@ class InjectorService {
                 taskList.add(task)
             }
 
-            def bbPlan = saveBlackboardPlan(plan, projectId, taskList)
+            plan.tasks = taskList
+            def bbPlan = saveBlackboardPlan(plan, projectId)
             def bbMapping = saveBlackboardMapping(mapping, projectId, bbPlan)
-        }
 
-        println "Plan del proyecto ${projectId} cargado."
-        rabbitMessagePublisher.send {
-            routingKey = 'Plan.update'
-            exchange = 'testGemsBBExchange'
-            body = projectId
+            def newPlan = JsonOutput.toJson(bbPlan)
+            //println JsonOutput.prettyPrint(oldPlan)
+            //println JsonOutput.prettyPrint(newPlan)
+
+            if(oldPlan != newPlan) {
+                println "Plan del proyecto ${projectId} cargado."
+                rabbitMessagePublisher.send {
+                    routingKey = 'Plan.update'
+                    exchange = 'testGemsBBExchange'
+                    body = projectId
+                }
+            }
+            else {
+                println "Plan del proyecto ${projectId} sin cambios."
+            }
         }
     }
 }

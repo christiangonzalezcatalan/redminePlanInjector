@@ -16,17 +16,20 @@ import static redminePlanInjector.Mocks.RedmineResponses.getIssuesFromRedmine
 import static redminePlanInjector.Mocks.RedmineResponses.getUserFromRedmine
 import static redminePlanInjector.Mocks.RedmineResponses.getIssueFromRedmine
 
+import grails.test.mixin.Mock
 import grails.test.mixin.TestFor
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.model.Header
 import org.mockserver.model.Parameter
 import org.mockserver.verify.VerificationTimes
 import spock.lang.Specification
+import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 
 /**
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(InjectorService)
+@Mock([RabbitMessagePublisher])
 class InjectorServiceSpec extends Specification {
 
     protected static ClientAndServer mockServer
