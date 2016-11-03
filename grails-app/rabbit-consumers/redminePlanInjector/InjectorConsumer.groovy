@@ -19,7 +19,5 @@ class InjectorConsumer {
      */
     def handleMessage(def body, MessageContext messageContext) {
         injectorService.injectProcess()
-        //println "Ejecutar inyección de plan ${body} (${new Date()})"
-        //body
     }
 }
