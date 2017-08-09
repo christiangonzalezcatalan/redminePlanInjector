@@ -236,7 +236,6 @@ class InjectorService {
     */
     def injectPlan(String projectId, Integer externalProjectId, repository) {
         def plan = getPlanFromBB(projectId)
-        def oldPlan = JsonOutput.toJson(plan)
 
         if(plan == null) {
             plan = [
@@ -277,19 +276,12 @@ class InjectorService {
             def bbPlan = saveBlackboardPlan(plan, projectId)
             def bbMapping = saveBlackboardMapping(mapping, projectId, bbPlan)
 
-            def newPlan = JsonOutput.toJson(bbPlan)
-
-            if(oldPlan != newPlan) {
-                println "Plan del proyecto ${projectId} cargado."
-                rabbitMessagePublisher.send {
-                    routingKey = 'Plan.update'
-                    exchange = 'testGemsBBExchange'
-                    body = projectId
-                }
-            }
-            else {
-                println "Plan del proyecto ${projectId} sin cambios."
-            }
+            println "Plan del proyecto ${projectId} cargado."
+            /*rabbitMessagePublisher.send {
+                routingKey = 'Plan.update'
+                exchange = 'testGemsBBExchange'
+                body = projectId
+            }*/
         }
     }
 }
